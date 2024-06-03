@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "This is a complex backend project",
   "main": "index.js",
+  "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -12,5 +13,8 @@
     "mongoDB"
   ],
   "author": "Sugata Laha",
-  "license": "ISC"
+  "license": "ISC",
+  "devDependencies": {
+    "nodemon": "^3.1.2"
+  }
 }
