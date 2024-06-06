@@ -3,7 +3,25 @@ import ApiError from "../utils/apiClass.js"
 import {User} from "../models/user_models.js";
 import uploadOnCloudinary from "../utils/filehandling.js";
 import apiResponse from "../utils/apiResponse.js"
+import ApiResponse from "../utils/apiResponse.js";
+import jwt from "jsonwebtoken";
 
+
+const generateAccessTokenandRefreshToken=async (userid)=>
+{
+    try{
+        const user=await User.findById(userid);
+        const accessToken=user.generateRefreshToken();
+        const refreshToken=user.generateAccessToken();
+        user.refreshToken=refreshToken
+        await user?.save({validateBeforeSave:false});
+        return {accessToken,refreshToken};
+    }
+    catch(error)
+    {   
+        throw new ApiError(500,"Something went wrong while generating access and refresh token")
+    }
+}
 const registerUser=asyncHandler(async (req,res)=>
 {
     //Get user data from the frontend
@@ -75,4 +93,109 @@ const registerUser=asyncHandler(async (req,res)=>
     
 })
 
-export default registerUser
+const loginUser=asyncHandler(async(req,res)=>
+{
+    //Accept username,email and password
+    //Check if user is already there in db or not by matching username,email and password
+    //If so, respond with status ok and send refresh and access tokens as cookies
+    //Else throw error that user has to register first
+    const {password,username,email}=req.body
+    if([username,email].some((field)=>
+    {
+        field?.trim()===""
+    }))
+    {
+        throw new ApiError(400,"Username or email is missing");
+    }
+    const existedUser=await User.findOne(
+        {
+            $or:[{email},{username}]
+        }
+    )
+    if(!existedUser)
+    {
+        throw new ApiError(400,"User is not registered");
+    }
+    let flag=await existedUser.checkPassword(password);
+    if(!flag)
+    {
+        throw new ApiError(400,"Enter valid password");
+    }
+    const {accessToken,refreshToken}=await generateAccessTokenandRefreshToken(existedUser._id)
+    const existedUser2=await User.findById(existedUser._id).select("-password -refreshToken");
+    const options=
+    {
+        httpOnly:true,
+        secure:true
+    }
+    return res.status(200).cookie("Access token",accessToken,options
+    ).cookie("Refresh token",refreshToken,options).json(new ApiResponse(200,{
+        user:existedUser2,
+        accessToken:accessToken,
+        refreshToken:refreshToken
+    },"User logged in successfully"))
+})
+
+const logoutUser=asyncHandler(async (req,res)=>
+{
+    User.findByIdAndUpdate(
+        req?.user?._id,
+        {
+            $set:
+            {
+                refreshToken:undefined
+            }
+        },
+    )
+    const options =
+    {
+        httpOnly: true,
+        secure: true
+    }
+
+    return res.status(200).clearCookie("Access token",options)
+    .clearCookie("Refresh token",options)
+    .json(new ApiResponse(200,{},"User logged out successfully"))
+})
+
+const refreshAccessToken=asyncHandler(async (req,res)=>
+{
+    const IncomingRefreshToken=req?.cookies.refreshToken||req.body.refreshToken;
+    if(!IncomingRefreshToken)
+    {
+        throw new ApiError(400,"Unauthorized access");
+    }
+    const decoded_token = jwt.verify(IncomingRefreshToken, process.env.REFRESH_TOKEN_SECRET)
+
+    const LoggedInUser=await User.findById(decoded_token?._id);
+    const refreshToken=LoggedInUser.refreshToken;
+    if(!LoggedInUser)
+    {
+        throw new ApiError(400,"Refresh Token does not match");
+    }
+    if(IncomingRefreshToken!==LoggedInUser.refreshToken)
+    {
+        throw new ApiError(401,"Refresh token expired or already has been used")
+    }
+    const options=
+    {
+        httpOnly:true,
+        secure:true
+    }
+    const newAccessToken=await LoggedInUser.generateAccessToken();
+    return res.status(200).cookie("Access Token",newAccessToken,options).cookie("Refresh Token",refreshToken,options).json(
+        {
+            message:"Access token refreshed successfully",
+            LoggedInUser,
+            accessToken:newAccessToken,
+            refreshToken:IncomingRefreshToken
+        }
+    )
+})
+export 
+{
+    registerUser,
+    loginUser,
+    logoutUser,
+    refreshAccessToken
+}

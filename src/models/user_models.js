@@ -12,6 +12,10 @@ const userSchema=new mongoose.Schema({
             ref:"Video"
         }
     ],
+    refreshToken:
+    {
+        type:String
+    },
     email:
     {
         type: String,
@@ -68,7 +72,7 @@ userSchema.methods.checkPassword= async function(password)
 
 userSchema.methods.generateAccessToken=function()
 {
-    jwt.sign(
+    return jwt.sign(
         {
             _id:this._id,
             fullname:this.fullname,
@@ -84,7 +88,7 @@ userSchema.methods.generateAccessToken=function()
 
 userSchema.methods.generateRefreshToken=function()
 {
-    jwt.sign(
+    return jwt.sign(
         {
             _id: this._id,
         },
