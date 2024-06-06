@@ -27,11 +27,11 @@ const userSchema=new mongoose.Schema({
         lowercase: true,
         trim: true
     },
-    coverImage:
+    CoverImage:
     {
         type:String,
     },
-    avatar:
+    Avatar:
     {
         type:String,
         required:true,
@@ -40,6 +40,13 @@ const userSchema=new mongoose.Schema({
     {
         type:String,
         required:[true,"Password is required"]
+    },
+    username:
+    {
+        type:String,
+        requried:true,
+        unique:true,
+        lowercase:true
     }
 
 },{timestamps:true})
