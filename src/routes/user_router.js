@@ -1,9 +1,9 @@
 import express from "express";
-import { registerUser } from "../controllers/user_controller.js";
+import { changePassword, getCurrentUser, getUserChannelProfile, getWatchHistory, registerUser, updateUserAvatar, updateUserCoverImage, updateUserDetails } from "../controllers/user_controller.js";
 import { upload } from "../middlewares/multer_middle.js";
 import {loginUser,logoutUser} from "../controllers/user_controller.js"
 import { refreshAccessToken } from "../controllers/user_controller.js";
-import authmiddleware from "../middlewares/auth_middleware.js"
+import authmiddleware, { verifyJWT } from "../middlewares/auth_middleware.js"
 
 const userRouter=express.Router()
 
@@ -29,4 +29,17 @@ userRouter.route("/logout").post(authmiddleware,logoutUser)
 
 userRouter.route("/refresh-access-token").post(refreshAccessToken)
 
+userRouter.route('/change-password').post(verifyJWT,changePassword)
+
+userRouter.route('/current-user').get(verifyJWT,getCurrentUser)
+
+userRouter.route('/update-user').patch(verifyJWT,updateUserDetails)
+
+userRouter.route('/avatar').patch(verifyJWT,upload.single("avatar"),updateUserAvatar)
+
+userRouter.route('/coverimage').patch(verifyJWT,upload.single("coverImage"),updateUserCoverImage)
+
+userRouter.route('/c/:username').get(verifyJWT,getUserChannelProfile)
+
+userRouter.route("/history").get(verifyJWT,getWatchHistory)
 export default userRouter
