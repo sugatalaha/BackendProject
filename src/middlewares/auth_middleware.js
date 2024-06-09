@@ -25,7 +25,6 @@ try {
         req.user=user;
         next();
 } catch (error) {
-    console.log(error)
     throw new ApiError(500,"Internal Server Error")
 }
 
