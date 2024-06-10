@@ -3,8 +3,7 @@ import ApiError from "../utils/apiClass.js"
 import {User} from "../models/user_models.js";
 import {uploadOnCloudinary} from "../utils/filehandling.js";
 import { deleteFromCloudinary } from "../utils/filehandling.js";
-import apiResponse from "../utils/apiResponse.js"
-import ApiResponse from "../utils/apiResponse.js";
+import ApiResponse from "../utils/ApiResponse.js";
 import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
 import dotenv from "dotenv"
