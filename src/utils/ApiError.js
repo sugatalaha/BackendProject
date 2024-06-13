@@ -1,4 +1,4 @@
-class ApiError extends Error
+class ApiErrorClass extends Error
 {
     constructor(
         code,
@@ -13,4 +13,4 @@ class ApiError extends Error
     }
 }
 
-export default ApiError;
+export const ApiError=ApiErrorClass

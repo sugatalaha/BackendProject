@@ -1,4 +1,4 @@
-class ApiResponse
+class ApiResponseClass
 {
     constructor(status,data,message)
     {
@@ -9,4 +9,4 @@ class ApiResponse
     }
 }
 
-export default ApiResponse
+export const ApiResponse=ApiResponseClass

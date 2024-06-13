@@ -3,7 +3,7 @@ import { changePassword, getCurrentUser, getUserChannelProfile, getWatchHistory,
 import { upload } from "../middlewares/multer_middle.js";
 import {loginUser,logoutUser} from "../controllers/user_controller.js"
 import { refreshAccessToken } from "../controllers/user_controller.js";
-import authmiddleware, { verifyJWT } from "../middlewares/auth_middleware.js"
+import { verifyJWT } from "../middlewares/auth_middleware.js"
 
 const userRouter=express.Router()
 
@@ -25,7 +25,7 @@ userRouter.route("/register").post(
 
 userRouter.route("/login").post(loginUser);
 
-userRouter.route("/logout").post(authmiddleware,logoutUser)
+userRouter.route("/logout").post(verifyJWT,logoutUser)
 
 userRouter.route("/refresh-access-token").post(refreshAccessToken)
 
