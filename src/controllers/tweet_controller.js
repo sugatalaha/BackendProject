@@ -28,7 +28,7 @@ const getUserTweets = asyncHandler(async (req, res) => {
             {
                 $match:
                 {
-                    owner:mongoose.Schema.Types.ObjectId(userid)
+                    owner:userid
                 }
             }
         ]

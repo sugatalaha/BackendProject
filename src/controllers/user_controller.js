@@ -46,11 +46,8 @@ const registerUser = asyncHandler(async (req, res) => {
     if (existedUser) {
         throw new ApiError(404, "User already exists")
     }
-
     //Multer gives another attribute to req which is .files similar to express giving .body attribute to req
-    const localAvatarPath = req.files?.Avatar[0]?.path
-    // const localCoverImagePath=req.files?.CoverImage[0]?.path
-
+    const localAvatarPath = req?.files?.Avatar[0]?.path
     let localCoverImagePath;
     if (req.files && Array.isArray(req.files.CoverImage) && req.files.CoverImage.length > 0) {
         localCoverImagePath = req.files.CoverImage[0].path
@@ -80,7 +77,7 @@ const registerUser = asyncHandler(async (req, res) => {
     }
     else {
         return res.status(201).json(
-            new apiResponse(201, createdUser, "User registered successfully")
+            new ApiResponse(201, createdUser, "User registered successfully")
         )
     }
 
@@ -227,7 +224,8 @@ const updateUserAvatar = asyncHandler(async (req, res) => {
     }
     const prev_url = await User.findById(req?.user?._id).Avatar
     await deleteFromCloudinary(prev_url)
-    const url = await uploadOnCloudinary(AvatarLocalPath)?.url
+    const object = await uploadOnCloudinary(AvatarLocalPath)
+    const url=object.url
     if (!url) {
         throw new ApiError(400, "Avatar Updation failed")
     }
@@ -251,12 +249,13 @@ const updateUserCoverImage = asyncHandler(async (req, res) => {
     if (!coverImagePath) {
         throw new ApiError(400, "No Cover Image provided")
     }
-    const prev_url = await User.findById(req?.user?._id).CoverImage
+    const user = await User.findById(req?.user?._id)
+    const prev_url=user?.CoverImage
     if (prev_url) {
-        deleteFromCloudinary(prev_url)
+        await deleteFromCloudinary(prev_url)
     }
-    await deleteFromCloudinary(prev_url)
-    const url = await uploadOnCloudinary(coverImagePath)?.url
+    const object= await uploadOnCloudinary(coverImagePath)
+    const url=object?.url
     const CoverImageUpdatedUser = await User.findByIdAndUpdate(req?.user?._id,
         {
             $set: { CoverImage: url }
@@ -279,6 +278,8 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
             {
                 username: username?.toLowerCase(),
             },
+        },
+        {
             $lookup:
             {
                 from: "subscriptions",
@@ -286,6 +287,8 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
                 foreignField: "channel",
                 as: "subscribers"
             },
+        },
+        {            
             $lookup:
             {
                 from: "subscriptions",
@@ -293,6 +296,8 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
                 foreignField: "subsciber",
                 as: "subscribedTo"
             },
+        },
+        {
             $addFields:
             {
                 subscribersCount:
@@ -335,12 +340,14 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
 })
 
 const getWatchHistory = asyncHandler(async (req, res) => {
-    const user = await User.aggregate(
+    const user = await User.aggregate([
         {
             $match:
             {
-                _id: mongoose.Schema.Types.ObjectId(req?.user?._id)
+                _id: req?.user?._id
             },
+        },
+        {
             $lookup:
             {
                 from: "videos",
@@ -369,6 +376,8 @@ const getWatchHistory = asyncHandler(async (req, res) => {
                                         }
                                     ]
                             },
+                        },
+                        {
                             $addFields:
                             {
                                 owner:
@@ -381,8 +390,8 @@ const getWatchHistory = asyncHandler(async (req, res) => {
 
             },
         }
-    )
-
+    
+    ])
     return res.status(200).json(new ApiResponse(200, user[0]?.watchHistory, "Watch History received successfully"))
 })
 export {

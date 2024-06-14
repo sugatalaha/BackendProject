@@ -28,10 +28,6 @@ const uploadOnCloudinary=async (localfilepath)=>
 const deleteFromCloudinary=async (url)=>
 {
     await cloudinary.api.delete_resources(url)
-    .then(()=>
-    {
-        console.log("Image deleted successfully");
-    })
     .catch((error)=>
     {
         console.log(error);

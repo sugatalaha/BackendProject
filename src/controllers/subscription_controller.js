@@ -46,7 +46,7 @@ const getUserChannelSubscribers = asyncHandler(async (req, res) => {
     }
     const subscriptionAggregate=await Subscription.aggregate([
         {
-            $match:{channel:mongoose.Schema.Types.ObjectId(channelId)}
+            $match:{channel:channelId}
         }
     ])
     const subscribers=subscriptionAggregate?.length
@@ -60,7 +60,7 @@ const getSubscribedChannels = asyncHandler(async (req, res) => {
     }
     const subscriptionAggregate=Subscription.aggregate([
         {
-            $match:{subscriber:mongoose.Schema.Types.ObjectId(subscriberId)}
+            $match:{subscriber:subscriberId}
         }
     ])
     return res.status(200).json(new ApiResponse(200,subscriptionAggregate?.length,"Channels subscribed to retrieved"));
